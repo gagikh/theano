@@ -32,9 +32,15 @@ def activation_fcn():
 	Fg = theano.function(inputs=[y], outputs=T.cos(y))
         return (F, Fg)
 
-def train_net(L0, L1, F, Fg, gamma, X, Y, w0, w1):
+def train_net(L0, L1, F, Fg, gamma, alpha, X, Y, w0, w1):
 
     N = len(Y)
+    dw0_t = np.empty_like(w0)
+    dw1_t = np.empty_like(w1)
+
+    dw0_t[:] = 0
+    dw1_t[:] = 0
+
     for i in range(0, N):
         x = X[i]
         y = Y[i] 
@@ -55,15 +61,24 @@ def train_net(L0, L1, F, Fg, gamma, X, Y, w0, w1):
         dwo = (gamma * do * a)
         # TODO: Update then mult????
         dh  = ag * do * w1
-        w1 += dwo
+        dw1 = dwo + alpha * dw1_t
+        w1 += dw1
+
+        # Update momentum
+        dw1_t = dw1
 
         #dw00 = (gamma * dh * w0[:,0])
         #dw01 = (gamma * dh * w0[:,1])
-        dw00 = (gamma * dh * x[0])
-        dw01 = (gamma * dh * x[1]) # * 1
+
+        dw00 = (gamma * dh * x[0]) + alpha * dw0_t[:,0]
+        dw01 = (gamma * dh * x[1]) + alpha * dw0_t[:,1]
 
         w0[:,0] += dw00
         w0[:,1] += dw01
+
+        # Update momentum
+        dw0_t[:,0] = dw00
+        dw0_t[:,1] = dw01
 
 def test_net (L0, L1, F, X, Y, w0, w1):
     test = X
@@ -81,7 +96,7 @@ def test_net (L0, L1, F, X, Y, w0, w1):
     return Z
 
 def main():
-    H = 5
+    H = 3
     # W = (H+1)x2
     # w9[:,0] = xn
     # w0[:,1] = thetta 
@@ -102,8 +117,11 @@ def main():
     L1 = second_layer()
     F,Fg = activation_fcn()
     gamma = 0.01
+    # momentum function
+    alpha = 0.01
 
-    train_net(L0, L1, F, Fg, gamma, X, Y, w0, w1)
+    for i in range(0, 1):
+        train_net(L0, L1, F, Fg, gamma, alpha, X, Y, w0, w1)
 
     Z = test_net (L0, L1, F, X, Y, w0, w1)
 
