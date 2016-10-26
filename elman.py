@@ -105,7 +105,7 @@ def test_net (L, F, O, X, W0, W1):
 def main():
     # Hidden units
     # M contexts, 2 inputs
-    H = 1
+    H = 2
     M = H
     # W = (H+1)
     W0 = np.random.uniform(low=-0.5, high=0.5, size=(H, M+2+1))
